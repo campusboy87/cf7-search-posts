@@ -89,16 +89,13 @@ class WPCF7SP {
 	 * @since 0.2
 	 */
 	function hooks() {
-		global $hook_suffix;
-		
 		add_filter( 'wpcf7_editor_panels', [ $this, 'add_tab' ] );
 		
 		$form_new  = 'contact-form-7_page_wpcf7-new';
 		$form_edit = 'toplevel_page_wpcf7';
-		if ( $hook_suffix && ( $form_new == $hook_suffix || $form_edit == $hook_suffix ) ) {
-			add_action( 'admin_print_scripts', [ $this ], 'assets' );
-		}
 		
+		add_action( "admin_print_scripts-{$form_new}", [ $this, 'assets' ] );
+		add_action( "admin_print_scripts-{$form_edit}", [ $this, 'assets' ] );
 	}
 	
 	/**
@@ -107,8 +104,9 @@ class WPCF7SP {
 	 * @since 0.2
 	 */
 	function assets() {
-		wp_enqueue_script( 'cf7sp', CF7SP_PATH . 'assets/cf7sp-admin.js' );
+		wp_enqueue_script( 'cf7sp', CF7SP_PATH . 'assets/cf7sp-admin.js', [ 'jquery-ui-tabs' ] );
 		wp_enqueue_style( 'cf7sp', CF7SP_PATH . 'assets/cf7sp-admin.css' );
+		wp_enqueue_style( 'cf7sp-jquery-ui', '//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css' );
 	}
 	
 	/**
@@ -149,12 +147,6 @@ class WPCF7SP {
 		
 		include CF7SP_PATH . 'template.php';
 		
-		/**
-		 * @var WP_Post_Type $post_type
-		 */
-		foreach ( $this->allow_post_types() as $post_type ) {
-			printf( '<p><a class="button-primary" href="#%s">%s</a></p>', $post_type->name, $post_type->label );
-		}
 	}
 	
 	/**
