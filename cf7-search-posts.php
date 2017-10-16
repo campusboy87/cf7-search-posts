@@ -2,8 +2,8 @@
 /*
 Plugin Name: CF7 Search Posts
 Plugin URI: https://github.com/campusboy87/cf7-search-posts
-Description: Добавляет закладку в редактор формы для поиска посков, содержащих редактируемую форму.
-Version: 0.1
+Description: Добавляет закладку в редактор формы для поиска посnов, содержащих редактируемую форму.
+Version: 0.2
 Author: campusboy
 Author URI: https://wp-plus.ru/
 License: MIT
@@ -11,10 +11,28 @@ License: MIT
 
 /**
  * Предотвращение прямого доступа к файлу.
+ *
+ * @since 0.1
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+/**
+ * Путь к папке плагина c закрывающим слэшем
+ *
+ * @since 0.2
+ * @var string
+ */
+define( 'CF7SP_PATH', plugin_dir_path( __FILE__ ) );
+
+/**
+ * Ссылка на папку с плагином с закрывающем слэшем
+ *
+ * @since 0.2
+ * @var string
+ */
+define( 'CF7SP_URL', plugin_dir_url( __FILE__ ) );
 
 
 /**
@@ -62,7 +80,35 @@ class WPCF7SP {
 			//echo '1';
 		}
 		
+		$this->hooks();
+	}
+	
+	/**
+	 * Хуки
+	 *
+	 * @since 0.2
+	 */
+	function hooks() {
+		global $hook_suffix;
+		
 		add_filter( 'wpcf7_editor_panels', [ $this, 'add_tab' ] );
+		
+		$form_new  = 'contact-form-7_page_wpcf7-new';
+		$form_edit = 'toplevel_page_wpcf7';
+		if ( $hook_suffix && ( $form_new == $hook_suffix || $form_edit == $hook_suffix ) ) {
+			add_action( 'admin_print_scripts', [ $this ], 'assets' );
+		}
+		
+	}
+	
+	/**
+	 * Подключает CSS и JS
+	 *
+	 * @since 0.2
+	 */
+	function assets() {
+		wp_enqueue_script( 'cf7sp', CF7SP_PATH . 'assets/cf7sp-admin.js' );
+		wp_enqueue_style( 'cf7sp', CF7SP_PATH . 'assets/cf7sp-admin.css' );
 	}
 	
 	/**
@@ -100,19 +146,19 @@ class WPCF7SP {
 	 * Выводит на экран контент вкладки.
 	 */
 	function render() {
-		?>
-        <h2>Поиск формы в постах</h2>
-		<?php
+		
+		include CF7SP_PATH . 'template.php';
+		
 		/**
 		 * @var WP_Post_Type $post_type
 		 */
 		foreach ( $this->allow_post_types() as $post_type ) {
-			printf( '<a class="button-primary" href="#%s">%s</a>', $post_type->name, $post_type->label );
+			printf( '<p><a class="button-primary" href="#%s">%s</a></p>', $post_type->name, $post_type->label );
 		}
 	}
 	
 	/**
-	 * Возвращает
+	 * Возвращает список типов постов, доступных для поиска
 	 *
 	 * @return array
 	 */
