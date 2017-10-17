@@ -104,9 +104,8 @@ class WPCF7SP {
 	 * @since 0.2
 	 */
 	function assets() {
-		wp_enqueue_script( 'cf7sp', CF7SP_PATH . 'assets/cf7sp-admin.js', [ 'jquery-ui-tabs' ] );
-		wp_enqueue_style( 'cf7sp', CF7SP_PATH . 'assets/cf7sp-admin.css' );
-		wp_enqueue_style( 'cf7sp-jquery-ui', '//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css' );
+		wp_enqueue_script( 'cf7sp', CF7SP_URL . 'assets/cf7sp-admin.js', [ 'jquery-ui-tabs' ] );
+		wp_enqueue_style( 'cf7sp', CF7SP_URL . 'assets/cf7sp-admin.css' );
 	}
 	
 	/**
