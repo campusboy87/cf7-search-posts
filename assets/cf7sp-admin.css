@@ -31,3 +31,14 @@
     float: right;
     width: 40em;
 }
+
+#post-type-tabs:before,
+#post-type-tabs:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+#post-type-tabs .ui-tabs-anchor {
+    padding: 5px;
+}
