@@ -167,4 +167,29 @@ class WPCF7SP {
 		
 		return apply_filters( 'cf7sp_exclude', $exclude );
 	}
+	
+	/**
+	 * Возвращает посты, где встречается текущий шоткод
+	 *
+	 * @param string $post_type
+	 *
+	 * @return array|bool
+	 */
+	function shortcode_in_posts( $post_type ) {
+		$post = empty( $_GET['post'] ) ? false : get_post( $_GET['post'] );
+		
+		if ( ! $post ) {
+			return false;
+		}
+		
+		$shortcode = sprintf( '[contact-form-7 id="%d" title="%s"]', $post->ID, $post->post_title );
+		
+		$posts = get_posts( [
+			'numberposts' => - 1,
+			'post_type'   => $post_type,
+			's'           => $shortcode,
+		] );
+		
+		return $posts;
+	}
 }
