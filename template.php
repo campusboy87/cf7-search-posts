@@ -29,10 +29,10 @@ if ( $post_types ): ?>
         <!-- Контент вкладок -->
 		<?php foreach ( $post_types as $post_type ): ?>
             <div id="tabs-<?php echo esc_attr( $post_type->name ); ?>">
-                
+
                 <h2><?php echo esc_html( $post_type->label ); ?></h2>
 				
-                <?php
+				<?php
 				$posts = $this->shortcode_in_posts( $post_type->name );
 				
 				if ( $posts ) {
@@ -58,6 +58,6 @@ if ( $post_types ): ?>
             </div>
 		<?php endforeach; ?>
 
-    </div>
+    </div><!-- / #post-type-tabs -->
 
 <?php endif;

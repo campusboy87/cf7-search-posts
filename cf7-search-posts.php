@@ -3,14 +3,14 @@
 Plugin Name: CF7 Search Posts
 Plugin URI: https://github.com/campusboy87/cf7-search-posts
 Description: Добавляет закладку в редактор формы для поиска посnов, содержащих редактируемую форму.
-Version: 0.2
+Version: 0.3
 Author: campusboy
 Author URI: https://wp-plus.ru/
 License: MIT
 */
 
 /**
- * Предотвращение прямого доступа к файлу.
+ * Предотвращает прямой доступ к файлу.
  *
  * @since 0.1
  */
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Путь к папке плагина c закрывающим слэшем
+ * Путь к папке плагина c закрывающим слэшем.
  *
  * @since 0.2
  * @var string
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'CF7SP_PATH', plugin_dir_path( __FILE__ ) );
 
 /**
- * Ссылка на папку с плагином с закрывающем слэшем
+ * Ссылка на папку с плагином с закрывающем слэшем.
  *
  * @since 0.2
  * @var string
@@ -36,7 +36,7 @@ define( 'CF7SP_URL', plugin_dir_url( __FILE__ ) );
 
 
 /**
- * Активация плагина CF7 Search Posts.
+ * Активирует CF7 Search Posts.
  */
 function wpcf7sp_init() {
 	$wpcf7sp = new WPCF7SP();
@@ -76,15 +76,11 @@ class WPCF7SP {
 			return;
 		}
 		
-		if ( wp_doing_ajax() ) {
-			//echo '1';
-		}
-		
 		$this->hooks();
 	}
 	
 	/**
-	 * Хуки
+	 * Подключает хуки.
 	 *
 	 * @since 0.2
 	 */
@@ -99,7 +95,7 @@ class WPCF7SP {
 	}
 	
 	/**
-	 * Подключает CSS и JS
+	 * Подключает CSS и JS.
 	 *
 	 * @since 0.2
 	 */
@@ -109,7 +105,7 @@ class WPCF7SP {
 	}
 	
 	/**
-	 * Отображает информационное окно, если CF7 не установлен
+	 * Отображает информационное окно, если CF7 не установлен.
 	 *
 	 * @since 0.1
 	 */
@@ -151,6 +147,7 @@ class WPCF7SP {
 	/**
 	 * Возвращает список типов постов, доступных для поиска
 	 *
+	 * @since 0.2
 	 * @return array
 	 */
 	function allow_post_types() {
@@ -170,6 +167,8 @@ class WPCF7SP {
 	
 	/**
 	 * Возвращает посты, где встречается текущий шоткод
+	 *
+	 * @since 0.3
 	 *
 	 * @param string $post_type
 	 *
