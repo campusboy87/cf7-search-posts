@@ -29,8 +29,32 @@ if ( $post_types ): ?>
         <!-- Контент вкладок -->
 		<?php foreach ( $post_types as $post_type ): ?>
             <div id="tabs-<?php echo esc_attr( $post_type->name ); ?>">
+                
                 <h2><?php echo esc_html( $post_type->label ); ?></h2>
-                <p>Proin elit arcu, rutrum commodo, vehicula tempus, commodo a, risus.</p>
+				
+                <?php
+				$posts = $this->shortcode_in_posts( $post_type->name );
+				
+				if ( $posts ) {
+					foreach ( $posts as $post ):
+						?>
+
+                        <p>
+                            <a href="<?php echo get_edit_post_link( $post ); ?>">
+								<?php echo get_the_title( $post ); ?>
+                            </a>
+                        </p>
+						
+						<?php
+					endforeach;
+				} else {
+					?>
+
+                    <p>Шоткод не найден.</p>
+					
+					<?php
+				}
+				?>
             </div>
 		<?php endforeach; ?>
 
