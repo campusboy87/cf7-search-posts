@@ -24,16 +24,17 @@
             <h2><? echo esc_html( $form->post_title ); ?></h2>
 			
 			<?php
-			if ( $form->files ) { ?>
-                <ul>
-					<?php foreach ( $form->files as $file ): ?>
-                        <li><?php echo esc_html( $file ); ?></li>
-					<?php endforeach; ?>
-                </ul>
-				<?php
+			
+			if ( $form->files ) {
+				$message = '';
+				foreach ( $form->files as $file ) {
+					$message .= sprintf( '<li>%s</li>', esc_html( $file ) );
+				}
+				printf( '<ul>%s</ul>', $message );
 			} else {
 				echo '<p>Данный шоткод в файлах не найден.</p>';
 			}
+		
 		endforeach;
 	
 	else:
