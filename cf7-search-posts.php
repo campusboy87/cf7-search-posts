@@ -3,7 +3,7 @@
 Plugin Name: CF7 Search Posts
 Plugin URI: https://github.com/campusboy87/cf7-search-posts
 Description: Добавляет закладку в редактор формы для поиска посnов, содержащих редактируемую форму.
-Version: 0.3
+Version: 0.4
 Author: campusboy
 Author URI: https://wp-plus.ru/
 License: MIT
@@ -34,17 +34,6 @@ define( 'CF7SP_PATH', plugin_dir_path( __FILE__ ) );
  */
 define( 'CF7SP_URL', plugin_dir_url( __FILE__ ) );
 
-
-/**
- * Активирует CF7 Search Posts.
- */
-function wpcf7sp_init() {
-	$wpcf7sp = new WPCF7SP();
-	$wpcf7sp->init();
-}
-
-add_action( 'plugins_loaded', 'wpcf7sp_init' );
-
 class WPCF7SP {
 	
 	/**
@@ -60,7 +49,7 @@ class WPCF7SP {
 	 *
 	 * @since 0.1
 	 */
-	public function __construct() {
+	public function __construct(){
 		$this->cf7_available = function_exists( 'wpcf7' );
 	}
 	
@@ -69,7 +58,7 @@ class WPCF7SP {
 	 *
 	 * @since 0.1
 	 */
-	public function init() {
+	public function init(){
 		if ( ! $this->cf7_available ) {
 			add_action( 'admin_notices', [ $this, 'notice' ] );
 			
@@ -84,7 +73,8 @@ class WPCF7SP {
 	 *
 	 * @since 0.2
 	 */
-	function hooks() {
+	function hooks(){
+		add_action( 'admin_menu', [ $this, 'menu' ] );
 		add_filter( 'wpcf7_editor_panels', [ $this, 'add_tab' ] );
 		
 		$form_new  = 'contact-form-7_page_wpcf7-new';
@@ -99,7 +89,7 @@ class WPCF7SP {
 	 *
 	 * @since 0.2
 	 */
-	function assets() {
+	function assets(){
 		wp_enqueue_script( 'cf7sp', CF7SP_URL . 'assets/cf7sp-admin.js', [ 'jquery-ui-tabs' ] );
 		wp_enqueue_style( 'cf7sp', CF7SP_URL . 'assets/cf7sp-admin.css' );
 	}
@@ -109,7 +99,7 @@ class WPCF7SP {
 	 *
 	 * @since 0.1
 	 */
-	function notice() {
+	function notice(){
 		?>
         <div class="error">
             <p>У Вас не установлен плагин <b>Contact Form 7</b></p>
@@ -126,8 +116,8 @@ class WPCF7SP {
 	 *
 	 * @return array
 	 */
-	function add_tab( $panels ) {
-		$panels['posts-panel'] = [
+	function add_tab( $panels ){
+		$panels[ 'posts-panel' ] = [
 			'title'    => 'Поиск формы в постах',
 			'callback' => [ $this, 'render' ],
 		];
@@ -137,10 +127,12 @@ class WPCF7SP {
 	
 	/**
 	 * Выводит на экран контент вкладки.
+	 *
+	 * @since 0.1
 	 */
-	function render() {
+	function render_tab(){
 		
-		include CF7SP_PATH . 'template.php';
+		include CF7SP_PATH . 'templates' . DIRECTORY_SEPARATOR . 'tab-template.php';
 		
 	}
 	
@@ -150,7 +142,7 @@ class WPCF7SP {
 	 * @since 0.2
 	 * @return array
 	 */
-	function allow_post_types() {
+	function allow_post_types(){
 		$exclude = [
 			'attachment'          => 'attachment',
 			'revision'            => 'revision',
@@ -174,21 +166,163 @@ class WPCF7SP {
 	 *
 	 * @return array|bool
 	 */
-	function shortcode_in_posts( $post_type ) {
-		$post = empty( $_GET['post'] ) ? false : get_post( $_GET['post'] );
+	function shortcode_in_posts( $post_type ){
+		$post = empty( $_GET[ 'post' ] ) ? false : get_post( $_GET[ 'post' ] );
 		
 		if ( ! $post ) {
 			return false;
 		}
 		
-		$shortcode = sprintf( '[contact-form-7 id="%d" title="%s"]', $post->ID, $post->post_title );
-		
 		$posts = get_posts( [
 			'numberposts' => - 1,
 			'post_type'   => $post_type,
-			's'           => $shortcode,
+			's'           => $this->build_shortcode( $post ),
 		] );
 		
 		return $posts;
 	}
+	
+	/**
+	 * Возвращает шоткод на основе данных поста.
+	 *
+	 * @since 0.4
+	 *
+	 * @param int|WP_Post|null $form
+	 *
+	 * @return string
+	 */
+	function build_shortcode( $form ){
+		$form = get_post( $form );
+		
+		return $form ? sprintf( '[contact-form-7 id="%d" title="%s"]', $form->ID, $form->post_title ) : '';
+	}
+	
+	/**
+	 * Возвращает список файлов, где встречается текущий шоткод.
+	 *
+	 * @since 0.4
+	 *
+	 * @return array|bool
+	 */
+	function all_shortcodes_in_files(){
+		$forms = get_posts( [
+			'numberposts' => - 1,
+			'post_type'   => 'wpcf7_contact_form',
+		] );
+		
+		if ( empty( $forms ) ) {
+			return false;
+		}
+		
+		$files = $this->list_files();
+		
+		if ( empty( $files ) ) {
+			return false;
+		}
+		
+		$list = [];
+		/**
+		 * @var WP_Post $form
+		 */
+		foreach ( $forms as $form ) {
+			$form->files = $this->shortcode_in_files( $form, $files );
+			$list[]      = $form;
+		}
+		
+		return $list;
+	}
+	
+	
+	/**
+	 * Возвращает список файлов, где встречается сигнатура шоткода.
+	 *
+	 * @since 0.4
+	 *
+	 * @param WP_Post $form
+	 * @param array   $files
+	 *
+	 * @return array
+	 */
+	function shortcode_in_files( $form, $files ){
+		$shortcode = $this->build_shortcode( $form );
+		
+		$files = array_filter( $files, function( $path ) use ( $shortcode ){
+			$content_file = $this->get_file( $path );
+			
+			return strpos( $content_file, $shortcode ) !== false;
+		} );
+		
+		return $files;
+	}
+	
+	/**
+	 * Возвращает список файлов для последующего поиска шоткодов в них.
+	 *
+	 * @since 0.4
+	 *
+	 * @return array|bool
+	 */
+	function list_files(){
+		$files = list_files( get_stylesheet_directory() );
+		if ( empty( $files ) ) {
+			return false;
+		}
+		
+		return array_filter( $files, function( $path ){
+			return strpos( $path, '.php' ) !== false;
+		} );
+	}
+	
+	/**
+	 * Создает подменю у плагина CF7.
+	 *
+	 * @since 0.4
+	 */
+	function menu(){
+		add_submenu_page( 'wpcf7', 'Поиск форм', 'Поиск форм', 'wpcf7_read_contact_forms', 'wpcf7-sp', [
+			$this,
+			'render_page',
+		] );
+	}
+	
+	/**
+	 * Выводит на экран контент страницы.
+	 *
+	 * @since 0.4
+	 */
+	function render_page(){
+		include CF7SP_PATH . 'templates' . DIRECTORY_SEPARATOR . 'admin-page-template.php';
+	}
+	
+	/**
+	 * Возвращает контент файла.
+	 *
+	 * @since 0.4
+	 *
+	 * @param $path
+	 *
+	 * @return bool|string
+	 */
+	function get_file( $path ){
+		
+		if ( function_exists( 'realpath' ) ) {
+			$path = realpath( $path );
+		}
+		
+		if ( ! $path || ! @is_file( $path ) ) {
+			return '';
+		}
+		
+		return @file_get_contents( $path );
+	}
 }
+
+/**
+ * Активирует CF7 Search Posts.
+ */
+function wpcf7sp_init(){
+	$wpcf7sp = new WPCF7SP();
+	$wpcf7sp->init();
+}
+
+add_action( 'plugins_loaded', 'wpcf7sp_init' );
