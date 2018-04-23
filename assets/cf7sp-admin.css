@@ -42,3 +42,7 @@
 #post-type-tabs .ui-tabs-anchor {
     padding: 5px;
 }
+
+#post-type-tabs ul li[aria-selected="true"] {
+    font-weight: bold;
+}

@@ -119,7 +119,7 @@ class WPCF7SP {
 	function add_tab( $panels ){
 		$panels[ 'posts-panel' ] = [
 			'title'    => 'Поиск формы в постах',
-			'callback' => [ $this, 'render' ],
+			'callback' => [ $this, 'render_tab' ],
 		];
 		
 		return $panels;
@@ -152,9 +152,10 @@ class WPCF7SP {
 			'wpcf7_contact_form'  => 'wpcf7_contact_form',
 		];
 		
-		$exclude = array_diff_key( get_post_types( [], 'objects' ), $exclude );
+		//$exclude = array_diff_key( get_post_types( [], 'objects' ), $exclude );
 		
-		return apply_filters( 'cf7sp_exclude', $exclude );
+		//return apply_filters( 'cf7sp_exclude', $exclude );
+		return get_post_types( [], 'objects' );
 	}
 	
 	/**
@@ -167,19 +168,39 @@ class WPCF7SP {
 	 * @return array|bool
 	 */
 	function shortcode_in_posts( $post_type ){
+		global $wpdb;
 		$post = empty( $_GET[ 'post' ] ) ? false : get_post( $_GET[ 'post' ] );
 		
 		if ( ! $post ) {
 			return false;
 		}
 		
-		$posts = get_posts( [
-			'numberposts' => - 1,
-			'post_type'   => $post_type,
-			's'           => $this->build_shortcode( $post ),
-		] );
+		$posts = $wpdb->get_results('
+			SELECT 
+				p.ID as post_id, p.post_content as content, m.meta_value as meta
+			FROM 
+				'.$wpdb->prefix.'posts p
+			LEFT JOIN 
+				'.$wpdb->prefix.'postmeta m 
+			ON 
+				p.ID = m.post_id
+			WHERE 
+				p.post_type = "'.$post_type.'" AND 
+				(p.post_content LIKE "%[contact-form-7 %" OR m.meta_value LIKE "%[contact-form-7 %")
+		', ARRAY_A);
+		$posts_arr = [];
+		foreach ($posts as $posts_item) {
+			if (
+				preg_match('/\[contact-form-7\ [^\[\]]*\id=\"'.$post->ID.'\"[^\[\]]*?\]/', $posts_item['content']) ||
+				preg_match('/\[contact-form-7\ [^\[\]]*\id=\"'.$post->ID.'\"[^\[\]]*?\]/', $posts_item['meta']) ||
+				preg_match('/\[contact-form-7\ [^\[\]]*\title=\"'.$post->post_title.'\"[^\[\]]*?\]/', $posts_item['content']) ||
+				preg_match('/\[contact-form-7\ [^\[\]]*\title=\"'.$post->post_title.'\"[^\[\]]*?\]/', $posts_item['meta'])
+			) {
+				$posts_arr[] = $posts_item['post_id'];
+			}
+		}
 		
-		return $posts;
+		return array_unique($posts_arr);
 	}
 	
 	/**
